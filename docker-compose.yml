@@ -1,0 +1,37 @@
+logstash-buffer:
+  image: logstash:2.2.2  
+  links:
+   - redis-buffer  
+  volumes:
+   - ./logstash/config/patterns:/etc/logstash/patterns
+   - ./logstash-buffer/config/conf.d:/etc/logstash/conf.d
+  command: logstash agent -f /etc/logstash/conf.d/
+  ports:
+   - 5514:5514
+   - 5515:5515
+   - 5516:5516
+redis-buffer:
+  image: redis:3.0.7
+logstash-indexer:
+  image: logstash:2.2.2  
+  links:
+   - redis-buffer
+   - elasticsearch
+  volumes:
+   - ./logstash/config/patterns:/etc/logstash/patterns
+   - ./logstash-indexer/config/conf.d:/etc/logstash/conf.d
+   - ./logstash-indexer/config/templates.d:/etc/logstash/templates.d
+  command: logstash agent -f /etc/logstash/conf.d/
+elasticsearch:
+  image: elasticsearch:2.2.1
+  ports: 
+   - 9200:9200
+   - 9300:9300
+  volumes:
+   - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+kibana:
+  image: kibana:4.4.2
+  ports:
+   - 5601:5601
+  links:
+   - elasticsearch
